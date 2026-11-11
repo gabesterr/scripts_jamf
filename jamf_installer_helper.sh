@@ -35,10 +35,11 @@ else
 	EXTRA_ACTION="${7}"
 fi
 
+# CVOLUME_PATH parameter obviated by parsing of hdiutil below
 if [ -z "${8}" ]; then			#8 Mounted Volume Name (default PackageName)
-	VOLUME_PATH="/Volumes/$SRC_NAME"
+	CVOLUME_PATH="/Volumes/$SRC_NAME"
 else
-	VOLUME_PATH="/Volumes/${8}"
+	CVOLUME_PATH="/Volumes/${8}"
 fi
 
 if [ -z "${9}" ]; then			#9 Package Checksum (optional)
@@ -65,7 +66,7 @@ fi
 
 install_app() {
 	echo "mounting $1"
-	/usr/bin/hdiutil attach "$1" -nobrowse
+	VOLUME_PATH=$(/usr/bin/hdiutil attach "$1" -nobrowse | /usr/bin/grep "Apple_HFS" | /usr/bin/tail -1 | /usr/bin/awk -F"\t" '{print $NF}'
     mounterr=$?
     if [[ ${mounterr} -eq 0 ]]; then
     	if [[ -e "$DEST_PATH$APP_NAME" ]]; then 
@@ -90,7 +91,7 @@ install_app() {
     echo "  [✓] App installed - All Good =o)"
 }
 
-cleanupfiles() {
+cleanupfiles() {  # This gives an error and needs to be cleaned up
 	if [ -e "$VOLUME_PATH" ]; then
 		/usr/bin/hdiutil detach "$VOLUME_PATH"
         unmounterr=$?
