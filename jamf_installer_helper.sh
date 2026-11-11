@@ -69,14 +69,15 @@ install_app() {
 	VOLUME_PATH=$(/usr/bin/hdiutil attach "$1" -nobrowse | /usr/bin/grep "Apple_HFS" | /usr/bin/tail -1 | /usr/bin/awk -F"\t" '{print $NF}'
     mounterr=$?
     if [[ ${mounterr} -eq 0 ]]; then
-    	if [[ -e "$DEST_PATH$APP_NAME" ]]; then 
+		/bin/sleep 5
+		if [[ -e "$DEST_PATH$APP_NAME" ]]; then 
 			/bin/rm -Rf "$DEST_PATH$APP_NAME"
 		fi
 	    /bin/cp -pPR "$VOLUME_PATH/$APP_NAME" "$DEST_PATH"
         copyerr=$?
         if [[ ${copyerr} -eq 0 ]]; then
-            /bin/chmod -R 755 "$DEST_PATH/$APP_NAME"
-            /usr/bin/xattr -d com.apple.quarantine "$DEST_PATH/$APP_NAME"
+            /bin/chmod -R 755 "$DEST_PATH$APP_NAME"
+            /usr/bin/xattr -d com.apple.quarantine "$DEST_PATH$APP_NAME" 2>/dev/null
         else
             echo "[✗] ERROR: App failed to install. 0_o" >&2
             cleanupfiles $1
@@ -101,10 +102,11 @@ cleanupfiles() {  # This gives an error and needs to be cleaned up
     else
     	echo "$VOLUME_PATH does not exist"
     fi
-    if [ -e "$DMG_PATH" ]; then
+	/bin/sleep 1
+    if [[ -e "$DMG_PATH" ]]; then
         echo "this is where we would clean up / delete $DMG_PATH"
 	    #/bin/rm -f "$DMG_PATH"
-        if [ "$SRC_PATH" == "/Library/Application Support/JAMF/Waiting Room/" ]; then 
+        if [[ "$SRC_PATH" == "/Library/Application Support/JAMF/Waiting Room/" ]]; then 
  	        echo "this is where we would clean up / delete $DMG_PATH.cache.xml"
             #remove additional cache item in Waiting Room
             /bin/rm -f "$DMG_PATH.cache.xml"
